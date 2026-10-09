@@ -1,13 +1,37 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set. Add it in Vercel → Storage → Neon.");
+let _sql: NeonQueryFunction<false, false> | null = null;
+
+function getClient() {
+  if (_sql) return _sql;
+  const url = process.env.ZNOTES_DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "ZNOTE_DATABASE_URL is not set. Add it in Vercel → Project → Settings → Environment Variables.",
+    );
+  }
+  _sql = neon(url);
+  return _sql;
 }
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql: NeonQueryFunction<false, false> = new Proxy(
+  (() => {}) as unknown as NeonQueryFunction<false, false>,
+  {
+    apply(_target, _thisArg, args) {
+      // @ts-expect-error — dynamic invocation of the lazy client
+      return (getClient() as any)(...args);
+    },
+    get(_target, prop) {
+      const client = getClient() as any;
+      const value = client[prop];
+      return typeof value === "function" ? value.bind(client) : value;
+    },
+  },
+);
 
 export async function ensureSchema() {
-  await sql`
+  const db = getClient();
+  await db`
     CREATE TABLE IF NOT EXISTS notes (
       id            TEXT PRIMARY KEY,
       title         TEXT NOT NULL,
@@ -21,7 +45,7 @@ export async function ensureSchema() {
       updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS history (
       id            TEXT PRIMARY KEY,
       kind          TEXT NOT NULL,
@@ -33,12 +57,12 @@ export async function ensureSchema() {
       created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS preferences (
       key   TEXT PRIMARY KEY,
       value JSONB NOT NULL
     )
   `;
-  await sql`CREATE INDEX IF NOT EXISTS notes_updated_idx ON notes (updated_at DESC)`;
-  await sql`CREATE INDEX IF NOT EXISTS history_created_idx ON history (created_at DESC)`;
+  await db`CREATE INDEX IF NOT EXISTS notes_updated_idx ON notes (updated_at DESC)`;
+  await db`CREATE INDEX IF NOT EXISTS history_created_idx ON history (created_at DESC)`;
 }
