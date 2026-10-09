@@ -7,7 +7,7 @@ function getClient() {
   const url = process.env.ZNOTES_DATABASE_URL;
   if (!url) {
     throw new Error(
-      "ZNOTE_DATABASE_URL is not set. Add it in Vercel → Project → Settings → Environment Variables.",
+      "ZNOTES_DATABASE_URL is not set. Add it in Vercel → Project → Settings → Environment Variables.",
     );
   }
   _sql = neon(url);
@@ -18,7 +18,6 @@ export const sql: NeonQueryFunction<false, false> = new Proxy(
   (() => {}) as unknown as NeonQueryFunction<false, false>,
   {
     apply(_target, _thisArg, args) {
-      // @ts-expect-error — dynamic invocation of the lazy client
       return (getClient() as any)(...args);
     },
     get(_target, prop) {
@@ -65,4 +64,4 @@ export async function ensureSchema() {
   `;
   await db`CREATE INDEX IF NOT EXISTS notes_updated_idx ON notes (updated_at DESC)`;
   await db`CREATE INDEX IF NOT EXISTS history_created_idx ON history (created_at DESC)`;
-}
+        }
