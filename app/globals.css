@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 250 250 249;
+  --panel: 255 255 255;
+  --border: 226 226 224;
+  --fg: 24 24 27;
+  --muted: 113 113 122;
+  --accent: 37 99 235;
+  --danger: 185 28 28;
+}
+.dark {
+  --bg: 17 17 19;
+  --panel: 24 24 27;
+  --border: 39 39 42;
+  --fg: 244 244 245;
+  --muted: 161 161 170;
+  --accent: 96 165 250;
+  --danger: 248 113 113;
+}
+
+html, body { height: 100%; }
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  -webkit-font-smoothing: antialiased;
+}
+
+* { border-color: rgb(var(--border)); }
+
+.prose-note h1 { font-size: 1.5rem; font-weight: 650; margin: 1rem 0 .5rem; }
+.prose-note h2 { font-size: 1.15rem; font-weight: 600; margin: 1.25rem 0 .5rem; }
+.prose-note p  { line-height: 1.7; margin: .5rem 0; }
+.prose-note ul { list-style: disc; padding-left: 1.25rem; margin: .5rem 0; }
+.prose-note blockquote {
+  border-left: 3px solid rgb(var(--border));
+  padding-left: .75rem; color: rgb(var(--muted)); margin: .75rem 0;
+  }
